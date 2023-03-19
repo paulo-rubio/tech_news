@@ -75,4 +75,5 @@ def get_tech_news(amount):
     all_news = [scrape_news(fetch(new)) for new in news]
     create_news(all_news[:amount])
 
-    return all_news
+    print(all_news)
+    return all_news[:amount]
