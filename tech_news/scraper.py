@@ -1,10 +1,9 @@
 # Requisito 1
 import requests
 import time
-
 from parsel import Selector
 
-# from tech_news.database import create_news
+from tech_news.database import create_news
 
 
 def fetch(url):
@@ -38,9 +37,42 @@ def scrape_next_page_link(html_content):
 
 # Requisito 4
 def scrape_news(html_content):
-    """Seu código deve vir aqui"""
+    title = Selector(html_content).css(".entry-title::text").get().strip()
+    time_stamp = Selector(html_content).css(".meta-date::text").get()
+    writer = Selector(html_content).css(".n::text").get()
+    reading_time = (
+        Selector(html_content).css(".meta-reading-time::text").get().split()[0]
+    )
+    summary = (
+        Selector(html_content).css(".entry-content p").xpath("string()").get()
+    )
+    category = Selector(html_content).css(".label::text").get()
+    url = (
+        Selector(html_content)
+        .css(".pk-share-buttons-wrap")
+        .attrib["data-share-url"]
+    )
+
+    return {
+        "url": url,
+        "title": title,
+        "timestamp": time_stamp,
+        "writer": writer,
+        "reading_time": int(reading_time),
+        "summary": summary.strip(),
+        "category": category,
+    }
 
 
 # Requisito 5
 def get_tech_news(amount):
-    """Seu código deve vir aqui"""
+    url = "https://blog.betrybe.com/"
+    news = []
+    while len(news) < amount:
+        html = fetch(url)
+        news += scrape_updates(html)
+        url = scrape_next_page_link(html)
+    all_news = [scrape_news(fetch(new)) for new in news]
+    create_news(all_news[:amount])
+
+    return all_news
